@@ -63,9 +63,13 @@ VerneBot:"""
         return f"Something went wrong, but we're still scaling: \n\n`{e}`"
 
 # Utility to expose RAG-only answer for hybrid handling in 1_Chat.py
-def get_knowledgebase_response(query):
-    docs = retriever.invoke(query)
+def get_knowledgebase_response(prompt: str):
+    docs = retriever.invoke(prompt)
+
     if not docs:
-        return "", []
-    context = "\n".join(doc.page_content for doc in docs)
-    return context.strip(), docs
+        return None, None
+
+    top_doc = docs[0]
+    return top_doc.page_content, None
+
+

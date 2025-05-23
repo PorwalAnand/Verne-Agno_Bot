@@ -1,18 +1,18 @@
-# agno_vernebot/agent.py
-import os
 from dotenv import load_dotenv
 from agno.agent import Agent
 from agno.models.groq import Groq
-from .tools import duckduckgo_search
+from agno.tools.duckduckgo import DuckDuckGoTools
 
 load_dotenv()
 
 def create_verne_agno_agent():
-    model = Groq(id="llama-3.3-70b-versatile")  # Recommended for knowledge + reasoning
-    tools = [duckduckgo_search]
-    instructions = [
-        "You are VerneBot — a business strategist.",
-        "Use web search and your tools to guide founders and CEOs.",
-        "Always cite or mention sources when helpful."
-    ]
-    return Agent(model=model, tools=tools, instructions=instructions)
+    model = Groq(id="llama-3.3-70b-versatile")  # Based on the Agno sample
+    duck_tool = DuckDuckGoTools()               # ✅ Create the instance properly
+
+    return Agent(
+        model=model,
+        tools=[duck_tool],                      # ✅ Pass the instance (not class)
+        description="You are VerneBot — a business coach using Scaling Up frameworks.",
+        show_tool_calls=True,                   # Optional: shows which tools are triggered
+        markdown=True                           # For clean formatting in Streamlit
+    )

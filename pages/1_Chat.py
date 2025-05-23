@@ -117,25 +117,15 @@ if prompt:
 
     with st.chat_message("assistant"):
         try:
-            kb_context, _ = get_knowledgebase_response(prompt)
+            kb_content, kb_score = get_knowledgebase_response(prompt)
 
-            if kb_context:
+            if kb_content and kb_score and kb_score > 0.7:
                 response = get_response(prompt, st.session_state.chat_history)
-                assistant_reply = f"""
-### 📘 From Verne’s Knowledge Base
-{response.strip()}
-                """
+                assistant_reply = f"\n\n{response.strip()}"
             else:
                 agno_output = st.session_state.agno_agent.run(prompt)
-                agno_cleaned = agno_output.content.strip() if hasattr(agno_output, 'content') else str(agno_output)
-                assistant_reply = f"""
-### ❓ Couldn't find this in Verne’s core library
-
-So I searched the web to assist you better 🔍
-
-**Here’s what I found:**
-{agno_cleaned}
-                """
+                agno_clean = agno_output.content.strip() if hasattr(agno_output, "content") else str(agno_output)
+                assistant_reply = f"\n\n{agno_clean}"
 
         except Exception as e:
             assistant_reply = f"⚠️ An error occurred: {e}"
