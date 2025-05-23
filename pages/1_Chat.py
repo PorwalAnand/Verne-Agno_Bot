@@ -1,6 +1,7 @@
 import streamlit as st
 import datetime
-from agno_vernebot import create_verne_agno_agent  # Your custom Agno agent
+from chatbot import get_response, get_knowledgebase_response
+from agno_vernebot import create_verne_agno_agent
 
 # --- Streamlit Page Config and Styling ---
 st.set_page_config(page_title="Chat with VerneBot", layout="wide")
@@ -92,7 +93,6 @@ I'm VerneBot — your personal coach for scaling and strategy.
 Whether it's People, Strategy, Execution or Cash — I'm here to help you scale smart.
 
 You can ask me:
-
 • “How do I build a One-Page Strategic Plan?”
 • “What are the Rockefeller Habits?”
 • “How do I improve my cash conversion cycle?”
@@ -107,7 +107,7 @@ for sender, message in st.session_state.chat_history:
     with st.chat_message(sender):
         st.markdown(message)
 
-# --- Chat Input + Agent Response ---
+# --- Chat Input + Response ---
 prompt = st.chat_input("What challenge are we solving today?")
 
 if prompt:
@@ -117,17 +117,25 @@ if prompt:
 
     with st.chat_message("assistant"):
         try:
-            response = st.session_state.agno_agent.run(prompt)
+            kb_context, _ = get_knowledgebase_response(prompt)
 
-            # Handle raw or structured agent responses
-            if isinstance(response, str):
-                assistant_reply = response.strip()
+            if kb_context:
+                response = get_response(prompt, st.session_state.chat_history)
+                assistant_reply = f"""
+### 📘 From Verne’s Knowledge Base
+{response.strip()}
+                """
             else:
-                assistant_reply = str(response.content).strip()
+                agno_output = st.session_state.agno_agent.run(prompt)
+                agno_cleaned = agno_output.content.strip() if hasattr(agno_output, 'content') else str(agno_output)
+                assistant_reply = f"""
+### ❓ Couldn't find this in Verne’s core library
 
-            # Optional cleanup: mask tool function calls
-            if assistant_reply.startswith("<function="):
-                assistant_reply = "✅ I've used a web search to find insights. Ask your next question or let me summarize!"
+So I searched the web to assist you better 🔍
+
+**Here’s what I found:**
+{agno_cleaned}
+                """
 
         except Exception as e:
             assistant_reply = f"⚠️ An error occurred: {e}"
